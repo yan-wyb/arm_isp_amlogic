@@ -113,7 +113,7 @@ int renderImage(unsigned char *dst, struct fb_var_screeninfo vinfo, struct fb_fi
     return 0;
 }
 
-int renderImageGe2d(aml_ge2d_t *amlge2d, unsigned char *src, int width, int height, struct fb_var_screeninfo vinfo, uint32_t pixel_format, int fb_fd, int index)
+int renderImageGe2d(aml_ge2d_t *amlge2d, unsigned char *src, int width, int height, struct fb_var_screeninfo vinfo, uint32_t pixel_format, int fb_fd, int index, int cap_num)
 {
 	int ret = -1;
 	int i;
@@ -126,10 +126,18 @@ int renderImageGe2d(aml_ge2d_t *amlge2d, unsigned char *src, int width, int heig
 	amlge2d->ge2dinfo.src_info[0].rect.y = 0;
 	amlge2d->ge2dinfo.src_info[0].rect.w = width;
 	amlge2d->ge2dinfo.src_info[0].rect.h = height;
-	amlge2d->ge2dinfo.dst_info.rect.x = 0;
-	amlge2d->ge2dinfo.dst_info.rect.y = vinfo.yres * index;
-	amlge2d->ge2dinfo.dst_info.rect.w = vinfo.xres;
-	amlge2d->ge2dinfo.dst_info.rect.h = vinfo.yres;
+	if(cap_num == 1){
+		amlge2d->ge2dinfo.dst_info.rect.x = 0;
+		amlge2d->ge2dinfo.dst_info.rect.y = 0;
+	}else if (cap_num == 2){
+		amlge2d->ge2dinfo.dst_info.rect.x = 960;
+		amlge2d->ge2dinfo.dst_info.rect.y = 0;
+	}else{
+		amlge2d->ge2dinfo.dst_info.rect.x = 0;
+		amlge2d->ge2dinfo.dst_info.rect.y = 540;
+	}
+	amlge2d->ge2dinfo.dst_info.rect.w = vinfo.xres/2;
+	amlge2d->ge2dinfo.dst_info.rect.h = vinfo.yres/2;
 	amlge2d->ge2dinfo.dst_info.rotation = GE2D_ROTATION_0;
 	amlge2d->ge2dinfo.src_info[0].layer_mode = 0;
 	amlge2d->ge2dinfo.src_info[0].plane_alpha = 0xff;
@@ -140,11 +148,11 @@ int renderImageGe2d(aml_ge2d_t *amlge2d, unsigned char *src, int width, int heig
 		return -1;
 	}
 
-	vinfo.activate = FB_ACTIVATE_NOW;
-	vinfo.yoffset = vinfo.yres * index;
-	vinfo.vmode &= ~FB_VMODE_YWRAP;
-	ioctl(fb_fd, FBIOPAN_DISPLAY, &vinfo);
-	ioctl(fb_fd, FBIO_WAITFORVSYNC, 0);
+//	vinfo.activate = FB_ACTIVATE_NOW;
+//	vinfo.yoffset = vinfo.yres * index;
+//	vinfo.vmode &= ~FB_VMODE_YWRAP;
+//	ioctl(fb_fd, FBIOPAN_DISPLAY, &vinfo);
+//	ioctl(fb_fd, FBIO_WAITFORVSYNC, 0);
 
 
 	return 0;

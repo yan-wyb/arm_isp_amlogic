@@ -35,6 +35,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include<stdlib.h>
 
 #include "common.h"
 #include "isp_metadata.h"
@@ -762,6 +763,7 @@ void * video_thread(void *arg)
     int64_t start, end;
     struct gdc_usr_ctx_s gdc_ctx;
     int gdc_ret = -1;
+	int num=1,num_counter=0;
     /**************************************************
      * find thread id
      *************************************************/
@@ -1169,8 +1171,10 @@ void * video_thread(void *arg)
 //            if (v4l2_buf.type != V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
 //                renderImage(tparm->fbp + (src.width * src.height * 3 * fb_offset), tparm->vinfo, tparm->finfo, displaybuf, src.width, src.height, AFD_RENDER_MODE_LEFT_TOP, fb_fd, fb_offset);
 //			} else {
-			int index = display_count % ge2d_buffer_count;
-				renderImageGe2d(&amlge2d, displaybuf, src.width, src.height, tparm->vinfo, src.fmt, fb_fd, index);
+				int index = display_count % ge2d_buffer_count;
+				if(num_counter>2){
+					renderImageGe2d(&amlge2d, displaybuf, src.width, src.height, tparm->vinfo, src.fmt, fb_fd, index, num);
+				}
 //			}
             //save_image(displaybuf, dump_size, stream_type, tparm->capture_count);
         } else if (stream_type == ARM_V4L2_TEST_STREAM_META) {
@@ -1197,7 +1201,26 @@ void * video_thread(void *arg)
         if (tparm->capture_count > 0)
             tparm->capture_count--;
 
-    } while (tparm->capture_count != 0);
+		num_counter+=1;
+		if (num_counter==4){
+			if(num==1){
+				system("cap_check1 2");
+				num =2;
+//				num_counter=0;
+			}else if(num==2){
+				system("cap_check1 3");
+				num=3;
+//				num_counter=0;
+			}else if(num==3){
+				system("cap_check1 1");
+				num=1;
+//				num_counter=0;
+			}
+			num_counter = 0;
+		printf("cap_check : %d\n", num);
+		}
+
+    } while (1);
 
     /**************************************************
      * resource clean-up
@@ -1389,8 +1412,8 @@ int init_ge2d(int width, int height, uint32_t pixelformat)
 //	amlge2d.ge2dinfo.src_info[1].format = PIXEL_FORMAT_RGBA_8888;
 //	amlge2d.ge2dinfo.src_info[1].plane_number = 1;
 
-	amlge2d.ge2dinfo.dst_info.canvas_w = width;
-	amlge2d.ge2dinfo.dst_info.canvas_h = height;
+	amlge2d.ge2dinfo.dst_info.canvas_w = width/2;
+	amlge2d.ge2dinfo.dst_info.canvas_h = height/2;
 	amlge2d.ge2dinfo.dst_info.format = PIXEL_FORMAT_RGB_888;
 	amlge2d.ge2dinfo.dst_info.plane_number = 1;
 	amlge2d.ge2dinfo.dst_info.rotation = GE2D_ROTATION_0;
